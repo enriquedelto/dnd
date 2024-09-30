@@ -3,7 +3,7 @@
 from dash import html, dcc
 import dash_bootstrap_components as dbc
 import dash_table
-from data.class_stats import class_stats
+from data import class_stats
 
 def create_layout(app):
     layout = dbc.Container([

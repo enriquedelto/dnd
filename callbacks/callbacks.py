@@ -3,9 +3,8 @@
 from dash.dependencies import Input, Output, State, ALL
 from dash import html, dcc
 import plotly.graph_objs as go
-from models.character import CharacterStats
-from data.class_stats import class_stats
-from data.weapon_stats import weapon_stats
+from models import CharacterStats
+from data import class_stats, weapon_stats
 import dash_bootstrap_components as dbc
 
 def register_callbacks(app):

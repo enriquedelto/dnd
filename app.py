@@ -2,8 +2,8 @@
 
 from dash import Dash
 import dash_bootstrap_components as dbc
-from components.layout import create_layout
-from callbacks.callbacks import register_callbacks
+from components import create_layout
+from callbacks import register_callbacks
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
