@@ -182,3 +182,16 @@ class CharacterStats:
         if headshot:
             damage *= 1.5  # Supongamos que el headshot multiplica el daño por 1.5
         return damage
+
+    def set_weapon_damage(self, weapon_name, current_damage):
+        weapon = weapon_stats.get(weapon_name)
+        if not weapon:
+            raise ValueError("Arma no encontrada.")
+        
+        min_damage = weapon.get('Daño Mínimo', weapon.get('Daño Base'))
+        max_damage = weapon.get('Daño Máximo', weapon.get('Daño Base'))
+        
+        if not (min_damage <= current_damage <= max_damage):
+            raise ValueError(f"El daño debe estar entre {min_damage} y {max_damage} para {weapon_name}.")
+
+        self.current_weapon_damage = current_damage

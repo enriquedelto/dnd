@@ -3,8 +3,9 @@
 from dash.dependencies import Input, Output, State, ALL
 from dash import html, dcc
 import plotly.graph_objs as go
-from models import CharacterStats
-from data import class_stats, weapon_stats
+from models.character import CharacterStats
+from data.class_stats import class_stats
+from data.weapon_stats import weapon_stats
 import dash_bootstrap_components as dbc
 
 def register_callbacks(app):
@@ -360,4 +361,4 @@ def register_callbacks(app):
             html.Strong(f'Porcentaje de VM: {porcentaje_vm_actual:.2f}%'),
             mejora_texto,
             primary_combo_elements,
-        )
+)

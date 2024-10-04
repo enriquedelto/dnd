@@ -3,7 +3,7 @@
 from dash import html, dcc
 import dash_bootstrap_components as dbc
 import dash_table
-from data import class_stats
+from data import class_stats, weapon_stats
 
 def create_layout(app):
     layout = dbc.Container([
@@ -28,7 +28,107 @@ def create_layout(app):
                                 ),
                             ])
                         ], className='mb-3'),
-                        # Mostrar Estadísticas con Encantamientos
+                        # Selección de Armas
+                        dbc.Row([
+                            dbc.Col([
+                                dbc.Label('Arma Izquierda', html_for='weapon1_left'),
+                                dcc.Dropdown(
+                                    id='weapon1_left',
+                                    options=[{'label': w['Nombre'], 'value': w['Nombre']} for w in weapon_stats.values()],
+                                    value=None,
+                                    disabled=False
+                                ),
+                            ]),
+                            dbc.Col([
+                                dbc.Label('Arma Derecha', html_for='weapon1_right'),
+                                dcc.Dropdown(
+                                    id='weapon1_right',
+                                    options=[{'label': w['Nombre'], 'value': w['Nombre']} for w in weapon_stats.values()],
+                                    value=None,
+                                    disabled=False
+                                ),
+                            ]),
+                        ], className='mb-3'),
+                        # Selección de Segunda Arma (Opcional)
+                        dbc.Row([
+                            dbc.Col([
+                                dbc.Label('Segunda Arma Izquierda', html_for='weapon2_left'),
+                                dcc.Dropdown(
+                                    id='weapon2_left',
+                                    options=[{'label': w['Nombre'], 'value': w['Nombre']} for w in weapon_stats.values()],
+                                    value=None,
+                                    disabled=False
+                                ),
+                            ]),
+                            dbc.Col([
+                                dbc.Label('Segunda Arma Derecha', html_for='weapon2_right'),
+                                dcc.Dropdown(
+                                    id='weapon2_right',
+                                    options=[{'label': w['Nombre'], 'value': w['Nombre']} for w in weapon_stats.values()],
+                                    value=None,
+                                    disabled=False
+                                ),
+                            ]),
+                        ], className='mb-3'),
+                        # Campo para Daño Actual (visible condicionalmente)
+                        dbc.Row([
+                            dbc.Col([
+                                dbc.Label('Daño Actual (solo para Zweihander)', html_for='current_damage_zweihander'),
+                                dcc.Input(
+                                    id='current_damage_zweihander',
+                                    type='number',
+                                    min=weapon_stats['Zweihander']['Daño Mínimo'],
+                                    max=weapon_stats['Zweihander']['Daño Máximo'],
+                                    step=1,
+                                    placeholder='Introduce el daño actual',
+                                    disabled=True
+                                ),
+                            ])
+                        ], className='mb-3', id='damage_input_container'),
+                        # Selección de Tipo de Combate
+                        dbc.Row([
+                            dbc.Col([
+                                dbc.Label('Tipo de Combate', html_for='combat_type'),
+                                dcc.Dropdown(
+                                    id='combat_type',
+                                    options=[
+                                        {'label': 'Arma', 'value': 'weapon'},
+                                        {'label': 'Magia', 'value': 'magic'},
+                                        {'label': 'Mixto', 'value': 'mixed'},
+                                    ],
+                                    value='weapon'
+                                ),
+                            ])
+                        ], className='mb-3'),
+                        # Selección de Combinación
+                        dbc.Row([
+                            dbc.Col([
+                                dbc.Label('Combinación de Ataques', html_for='combination_select'),
+                                dcc.Dropdown(
+                                    id='combination_select',
+                                    options=[
+                                        {'label': 'Combinación 1', 'value': 'comb1'},
+                                        {'label': 'Combinación 2', 'value': 'comb2'},
+                                        {'label': 'Combinación 3', 'value': 'comb3'},
+                                    ],
+                                    value='comb1'
+                                ),
+                            ])
+                        ], className='mb-3'),
+                        # Opción de Headshot
+                        dbc.Row([
+                            dbc.Col([
+                                dbc.Checklist(
+                                    options=[
+                                        {"label": "Mostrar Headshot", "value": 'headshot'}
+                                    ],
+                                    value=[],
+                                    id="show_headshot",
+                                    switch=True,
+                                ),
+                            ])
+                        ], className='mb-3'),
+                        # Tablas de Estadísticas
                         dash_table.DataTable(
                             id='stats-table',
                             columns=[
@@ -42,119 +142,49 @@ def create_layout(app):
                             style_table={'overflowY': 'auto'},
                         ),
                         html.Hr(),
-                        html.H5('Movement', className='mt-3'),
+                        html.H5('Movimiento', className='mt-3'),
                         dash_table.DataTable(
                             id='movement-table',
                             columns=[
                                 {'name': 'Estadística', 'id': 'Estadística', 'type': 'text'},
-                                {'name': 'Valor', 'id': 'Valor', 'type': 'any', 'editable': True},
+                                {'name': 'Valor', 'id': 'Valor', 'type': 'numeric', 'editable': False},
                                 {'name': 'Add', 'id': 'Add', 'type': 'numeric', 'editable': True},
-                                {'name': 'Bonus (%)', 'id': 'Bonus', 'type': 'numeric', 'editable': True},
+                                {'name': 'Bonus', 'id': 'Bonus', 'type': 'numeric', 'editable': True},
                             ],
                             data=[],
                             style_cell={'textAlign': 'left', 'padding': '5px'},
                             style_header={'fontWeight': 'bold'},
+                            style_table={'overflowY': 'auto'},
                         ),
-                        html.H5('Damage', className='mt-3'),
-                        # Selección de armas
-                        dbc.Row([
-                            dbc.Col([
-                                dbc.Label('Arma Mano Izquierda'),
-                                dcc.Dropdown(
-                                    id='weapon1_left',
-                                    options=[],
-                                    placeholder='Selecciona un arma',
-                                ),
-                            ], width=6),
-                            dbc.Col([
-                                dbc.Label('Arma Mano Derecha'),
-                                dcc.Dropdown(
-                                    id='weapon1_right',
-                                    options=[],
-                                    placeholder='Selecciona un arma',
-                                ),
-                            ], width=6),
-                        ], className='mb-3'),
-                        dbc.Row([
-                            dbc.Col([
-                                dbc.Label('Arma Mano Izquierda 2'),
-                                dcc.Dropdown(
-                                    id='weapon2_left',
-                                    options=[],
-                                    placeholder='Selecciona un arma',
-                                ),
-                            ], width=6),
-                            dbc.Col([
-                                dbc.Label('Arma Mano Derecha 2'),
-                                dcc.Dropdown(
-                                    id='weapon2_right',
-                                    options=[],
-                                    placeholder='Selecciona un arma',
-                                ),
-                            ], width=6),
-                        ], className='mb-3'),
-                        # Menú desplegable con opciones "Weapon Combat" y "Spell Combat"
-                        dbc.Row([
-                            dbc.Col([
-                                dbc.Label('Tipo de Combate'),
-                                dcc.Dropdown(
-                                    id='combat_type',
-                                    options=[
-                                        {'label': 'Weapon Combat', 'value': 'weapon'},
-                                        {'label': 'Spell Combat', 'value': 'spell'},
-                                    ],
-                                    value='weapon',
-                                ),
-                            ], width=6),
-                            # Casilla 'toggle' para mostrar daño con modificador de headshot
-                            dbc.Col([
-                                dbc.Label('Mostrar daño de Headshot'),
-                                dbc.Checklist(
-                                    options=[{'label': '', 'value': 'show_headshot'}],
-                                    value=[],
-                                    id='show_headshot',
-                                    switch=True,
-                                ),
-                            ], width=6, style={'marginTop': '30px'}),
-                        ], className='mb-3'),
-                        # Menú toggle para seleccionar la combinación
-                        dbc.Row([
-                            dbc.Col([
-                                dbc.Label('Seleccionar Combinación'),
-                                dcc.RadioItems(
-                                    id='combination_select',
-                                    options=[
-                                        {'label': 'Combinación 1', 'value': 'comb1'},
-                                        {'label': 'Combinación 2', 'value': 'comb2'},
-                                    ],
-                                    value='comb1',
-                                    inline=True,
-                                ),
-                            ]),
-                        ], className='mb-3'),
-                        # Sección de "Primary Combo"
-                        html.H5('Primary Combo', className='mt-3'),
-                        html.Div(id='primary_combo'),
-                        html.H5('Defense', className='mt-3'),
+                        html.Hr(),
+                        html.H5('Defensa', className='mt-3'),
                         dash_table.DataTable(
                             id='defense-table',
                             columns=[
-                                {'name': 'Estadística', 'id': 'Estadística'},
-                                {'name': 'Valor', 'id': 'Valor'}
+                                {'name': 'Estadística', 'id': 'Estadística', 'type': 'text'},
+                                {'name': 'Valor', 'id': 'Valor', 'type': 'numeric', 'editable': False},
+                                {'name': 'Add', 'id': 'Add', 'type': 'numeric', 'editable': True},
                             ],
+                            data=[],
                             style_cell={'textAlign': 'left', 'padding': '5px'},
                             style_header={'fontWeight': 'bold'},
+                            style_table={'overflowY': 'auto'},
                         ),
-                        html.H5('Utility', className='mt-3'),
+                        html.Hr(),
+                        html.H5('Utilidad', className='mt-3'),
                         dash_table.DataTable(
                             id='utility-table',
                             columns=[
-                                {'name': 'Estadística', 'id': 'Estadística'},
-                                {'name': 'Valor', 'id': 'Valor'}
+                                {'name': 'Estadística', 'id': 'Estadística', 'type': 'text'},
+                                {'name': 'Valor', 'id': 'Valor', 'type': 'numeric', 'editable': False},
+                                {'name': 'Add', 'id': 'Add', 'type': 'numeric', 'editable': True},
                             ],
+                            data=[],
                             style_cell={'textAlign': 'left', 'padding': '5px'},
                             style_header={'fontWeight': 'bold'},
+                            style_table={'overflowY': 'auto'},
                         ),
+                        # Resto de los componentes...
                     ]),
                 ], className='mb-4'),
             ], width=4),
@@ -169,6 +199,15 @@ def create_layout(app):
                         html.Div(id='output-porcentaje-vm', className='mt-2'),
                         html.H5('Mejoras Sugeridas', className='mt-4'),
                         html.Pre(id='output-mejora-optima', style={'whiteSpace': 'pre-wrap'}),
+                        # Resumen del Combo y Daño
+                        dbc.Row([
+                            dbc.Col([
+                                html.Div(id='primary_combo'),
+                            ], width=6),
+                            dbc.Col([
+                                html.Div(id='damage_summary'),
+                            ], width=6, style={'textAlign': 'right'}),
+                        ], className='mt-3'),
                     ]),
                 ]),
             ], width=8),
