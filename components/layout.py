@@ -157,7 +157,6 @@ def create_layout(app):
                             style_header={'fontWeight': 'bold'},
                             style_table={'overflowY': 'auto'},
                         ),
-                        # Resto de los componentes...
                     ]),
                 ], className='mb-4'),
             ], width=4),
@@ -167,15 +166,23 @@ def create_layout(app):
                 dbc.Card([
                     dbc.CardBody([
                         html.H4('Resultados', className='card-title'),
-                        # Resumen del Combo y Daño
+                        # Agregar menú desplegable para seleccionar tipo de resultado
                         dbc.Row([
                             dbc.Col([
-                                html.Div(id='primary_combo'),
+                                dbc.Label('Seleccionar Tipo de Resultado', html_for='result_type_select'),
+                                dcc.Dropdown(
+                                    id='result_type_select',
+                                    options=[
+                                        {'label': 'Daño', 'value': 'damage'},
+                                        {'label': 'Velocidad de Movimiento', 'value': 'movement_speed'},
+                                    ],
+                                    value='damage',
+                                ),
                             ], width=6),
-                            dbc.Col([
-                                html.Div(id='damage_summary'),
-                            ], width=6, style={'textAlign': 'right'}),
-                        ], className='mt-3'),
+                        ], className='mb-3'),
+
+                        # Contenedor para mostrar los resultados
+                        html.Div(id='results_output'),
                     ]),
                 ]),
             ], width=8),

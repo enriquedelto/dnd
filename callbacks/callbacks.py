@@ -23,7 +23,7 @@ def register_callbacks(app):
             Output('movement-table', 'data'),
             Output('defense-table', 'data'),
             Output('utility-table', 'data'),
-            Output('primary_combo', 'children'),
+            Output('results_output', 'children'),  # Nuevo Output
         ],
         [
             Input('input-clase', 'value'),
@@ -35,12 +35,13 @@ def register_callbacks(app):
             Input('weapon2_right', 'value'),
             Input('combat_type', 'value'),
             Input('combination_select', 'value'),
+            Input('result_type_select', 'value'),  # Nuevo Input
         ],
     )
     def actualizar_estadisticas(
         clase_seleccionada, stats_rows, movement_rows,
         weapon1_left, weapon1_right, weapon2_left, weapon2_right,
-        combat_type, combination_select,
+        combat_type, combination_select, result_type_select
     ):
         # Obtener los atributos base de la clase seleccionada
         atributos_base = class_stats[clase_seleccionada]
@@ -196,92 +197,28 @@ def register_callbacks(app):
         defense_data = [{'Estadística': k, 'Valor': v} for k, v in character.defense_stats.items()]
         utility_data = [{'Estadística': k, 'Valor': v} for k, v in character.utility_stats.items()]
 
-        # Seleccionar el arma según la combinación seleccionada
-        if combination_select == 'comb1':
-            weapon_left = weapon1_left
-            weapon_right = weapon1_right
-        else:
-            weapon_left = weapon2_left
-            weapon_right = weapon2_right
+        # Generar contenido de resultados basado en 'result_type_select'
+        if result_type_select == 'damage':
+            # Lógica para generar resultados de daño
+            # ... (código para calcular y mostrar el daño)
+            results_content = html.Div([
+                html.H5('Resultados de Daño'),
+                # Aquí puedes agregar más detalles sobre el daño calculado
+            ])
 
-        # Generar la sección de Primary Combo
-        primary_combo_elements = []
+        elif result_type_select == 'movement_speed':
+            # Lógica para generar resultados de velocidad de movimiento
+            movement_speed = character.movement_stats.get('Velocidad de Movimiento', 'N/A')
+            movement_speed_with_weapon = character.movement_stats.get('Velocidad de movimiento con arma', 'N/A')
 
-        # Por simplicidad, consideramos solo el arma de la mano derecha si existe
-        if weapon_right:
-            selected_weapon = weapon_stats.get(weapon_right)
-        elif weapon_left:
-            selected_weapon = weapon_stats.get(weapon_left)
-        else:
-            selected_weapon = None
-
-        if selected_weapon and combat_type == 'weapon':
-            # Obtener los detalles del combo
-            combo = selected_weapon.get('Combo', [])
-            impact_zones = selected_weapon.get('Impact Zones', {})
-            base_damage = selected_weapon.get('Daño Base', 0)
-
-            # Crear una lista para almacenar las filas de ataques
-            primary_combo_rows = []
-            current_row = []
-
-            for idx, attack in enumerate(combo):
-                attack_num = idx + 1
-                # Crear input para Impact Zone
-                impact_zone_input = dcc.Input(
-                    id={'type': 'impact_zone', 'index': idx},
-                    type='number',
-                    min=1, max=3, step=1,
-                    value=1,  # Valor por defecto
-                    style={'width': '60px', 'display': 'inline-block', 'marginLeft': '10px'}
-                )
-
-                # Obtener el valor de la Impact Zone
-                impact_zone = 1  # Valor por defecto
-                impact_zone_value = impact_zones.get(impact_zone, 1.0)
-
-                # Calcular daño
-                attack_multiplier = attack['Daño %']
-                damage = character.calculate_attack_damage(
-                    base_damage, attack_multiplier, impact_zone_value, headshot=False
-                )
-
-                # Formatear el daño
-                display_damage = f"{damage:.2f}"
-
-                # Tiempos
-                windup = attack['Windup']
-                attack_time = attack['Attack']
-
-                # Construir la información del ataque
-                attack_info = html.Div([
-                    html.Div([
-                        html.Span(f'Ataque {attack_num}', style={'fontWeight': 'bold'}),
-                        html.Span(' Impact Zone: ', style={'marginLeft': '10px'}),
-                        impact_zone_input,
-                    ], style={'display': 'flex', 'alignItems': 'center'}),
-                    html.Div([
-                        html.Span(f"Daño: {display_damage}", style={'fontSize': '16px', 'fontWeight': 'bold'}),
-                    ], style={'marginTop': '5px'}),
-                    html.Div([
-                        html.Span(f"Windup: {windup} ms", style={'marginRight': '20px'}),
-                        html.Span(f"Attack: {attack_time} ms"),
-                    ], style={'marginTop': '5px'}),
-                ], style={'border': '1px solid #ccc', 'padding': '10px', 'marginBottom': '10px'})
-
-                # Añadir el ataque a la fila actual
-                current_row.append(dbc.Col(attack_info, width=6))
-
-                # Si tenemos dos ataques en la fila o es el último ataque, añadimos la fila a las filas principales
-                if len(current_row) == 2 or idx == len(combo) - 1:
-                    primary_combo_rows.append(dbc.Row(current_row, style={'marginBottom': '10px'}))
-                    current_row = []
-
-            # Asignar las filas al elemento principal
-            primary_combo_elements = primary_combo_rows
+            results_content = html.Div([
+                html.H5('Velocidad de Movimiento'),
+                html.P(f"Velocidad de Movimiento Total: {movement_speed}"),
+                html.P(f"Velocidad de Movimiento con Arma: {movement_speed_with_weapon}"),
+            ])
 
         else:
-            primary_combo_elements.append(html.P('No hay arma seleccionada o el tipo de combate es "Spell Combat".'))
+            results_content = html.P('Selecciona un tipo de resultado.')
 
         return (
             weapon1_left_options,
@@ -296,5 +233,5 @@ def register_callbacks(app):
             movement_data,
             defense_data,
             utility_data,
-            primary_combo_elements,
+            results_content,  # Nuevo retorno
         )
