@@ -70,21 +70,6 @@ def create_layout(app):
                                 ),
                             ]),
                         ], className='mb-3'),
-                        # Campo para Daño Actual (visible condicionalmente)
-                        dbc.Row([
-                            dbc.Col([
-                                dbc.Label('Daño Actual (solo para Zweihander)', html_for='current_damage_zweihander'),
-                                dcc.Input(
-                                    id='current_damage_zweihander',
-                                    type='number',
-                                    min=weapon_stats['Zweihander']['Daño Mínimo'],
-                                    max=weapon_stats['Zweihander']['Daño Máximo'],
-                                    step=1,
-                                    placeholder='Introduce el daño actual',
-                                    disabled=True
-                                ),
-                            ])
-                        ], className='mb-3', id='damage_input_container'),
                         # Selección de Tipo de Combate
                         dbc.Row([
                             dbc.Col([
@@ -115,19 +100,7 @@ def create_layout(app):
                                 ),
                             ])
                         ], className='mb-3'),
-                        # Opción de Headshot
-                        dbc.Row([
-                            dbc.Col([
-                                dbc.Checklist(
-                                    options=[
-                                        {"label": "Mostrar Headshot", "value": 'headshot'}
-                                    ],
-                                    value=[],
-                                    id="show_headshot",
-                                    switch=True,
-                                ),
-                            ])
-                        ], className='mb-3'),
+
                         # Tablas de Estadísticas
                         dash_table.DataTable(
                             id='stats-table',
@@ -194,11 +167,6 @@ def create_layout(app):
                 dbc.Card([
                     dbc.CardBody([
                         html.H4('Resultados', className='card-title'),
-                        dcc.Graph(id='grafica-vm'),
-                        html.Div(id='output-vm-total', className='mt-3'),
-                        html.Div(id='output-porcentaje-vm', className='mt-2'),
-                        html.H5('Mejoras Sugeridas', className='mt-4'),
-                        html.Pre(id='output-mejora-optima', style={'whiteSpace': 'pre-wrap'}),
                         # Resumen del Combo y Daño
                         dbc.Row([
                             dbc.Col([

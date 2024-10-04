@@ -2,7 +2,6 @@
 
 from dash.dependencies import Input, Output, State, ALL
 from dash import html, dcc
-import plotly.graph_objs as go
 from models.character import CharacterStats
 from data.class_stats import class_stats
 from data.weapon_stats import weapon_stats
@@ -24,10 +23,6 @@ def register_callbacks(app):
             Output('movement-table', 'data'),
             Output('defense-table', 'data'),
             Output('utility-table', 'data'),
-            Output('grafica-vm', 'figure'),
-            Output('output-vm-total', 'children'),
-            Output('output-porcentaje-vm', 'children'),
-            Output('output-mejora-optima', 'children'),
             Output('primary_combo', 'children'),
         ],
         [
@@ -39,14 +34,13 @@ def register_callbacks(app):
             Input('weapon2_left', 'value'),
             Input('weapon2_right', 'value'),
             Input('combat_type', 'value'),
-            Input('show_headshot', 'value'),
             Input('combination_select', 'value'),
         ],
     )
     def actualizar_estadisticas(
         clase_seleccionada, stats_rows, movement_rows,
         weapon1_left, weapon1_right, weapon2_left, weapon2_right,
-        combat_type, show_headshot, combination_select,
+        combat_type, combination_select,
     ):
         # Obtener los atributos base de la clase seleccionada
         atributos_base = class_stats[clase_seleccionada]
@@ -202,54 +196,6 @@ def register_callbacks(app):
         defense_data = [{'Estadística': k, 'Valor': v} for k, v in character.defense_stats.items()]
         utility_data = [{'Estadística': k, 'Valor': v} for k, v in character.utility_stats.items()]
 
-        # Gráfica
-        figura = go.Figure(data=[
-            go.Bar(
-                x=['Agilidad', 'Fuerza', 'Vigor'],
-                y=[character.agility, character.strength, character.vigor],
-                text=[character.agility, character.strength, character.vigor],
-                textposition='auto',
-            )
-        ])
-        figura.update_layout(
-            title='Atributos del Personaje',
-            yaxis_title='Valor',
-            xaxis_title='Atributos',
-            barmode='stack'
-        )
-
-        # Cálculo de VM actual
-        vm_total_actual = float(character.movement_stats['Velocidad de Movimiento'])
-        porcentaje_vm_actual = vm_total_actual / 3
-
-        # Mejora sugerida
-        mejoras = {}
-        for stat in ['Fuerza', 'Vigor', 'Agilidad', 'Destreza', 'Voluntad', 'Conocimiento', 'Ingenio']:
-            new_add_stats = add_stats.copy()
-            new_add_stats[stat] = new_add_stats.get(stat, 0) + 1
-            character_mejorado = CharacterStats(
-                strength=atributos_base['Strength'],
-                vigor=atributos_base['Vigor'],
-                agility=atributos_base['Agility'],
-                dexterity=atributos_base['Dexterity'],
-                will=atributos_base['Will'],
-                knowledge=atributos_base['Knowledge'],
-                resourcefulness=atributos_base['Resourcefulness'],
-                add_stats=new_add_stats,
-                movement_add=movement_add,
-                movement_bonus=movement_bonus,
-                peso_arma=peso_arma,
-                peso_armadura=peso_armadura
-            )
-            nueva_vm = float(character_mejorado.movement_stats['Velocidad de Movimiento'])
-            mejoras[stat] = nueva_vm - vm_total_actual
-
-        mejoras_ordenadas = sorted(mejoras.items(), key=lambda x: x[1], reverse=True)
-
-        mejora_texto = 'Mejores mejoras al siguiente punto:\n'
-        for idx, (estadistica, valor_mejora) in enumerate(mejoras_ordenadas, 1):
-            mejora_texto += f'{idx}. {estadistica} (+{valor_mejora:.2f} VM)\n'
-
         # Seleccionar el arma según la combinación seleccionada
         if combination_select == 'comb1':
             weapon_left = weapon1_left
@@ -299,15 +245,9 @@ def register_callbacks(app):
                 damage = character.calculate_attack_damage(
                     base_damage, attack_multiplier, impact_zone_value, headshot=False
                 )
-                damage_headshot = character.calculate_attack_damage(
-                    base_damage, attack_multiplier, impact_zone_value, headshot=True
-                )
 
                 # Formatear el daño
-                if 'show_headshot' in show_headshot:
-                    display_damage = f"{damage_headshot:.2f}"
-                else:
-                    display_damage = f"{damage:.2f} (HS: {damage_headshot:.2f})"
+                display_damage = f"{damage:.2f}"
 
                 # Tiempos
                 windup = attack['Windup']
@@ -356,9 +296,5 @@ def register_callbacks(app):
             movement_data,
             defense_data,
             utility_data,
-            figura,
-            html.Strong(f'Velocidad de Movimiento Total: {vm_total_actual:.2f}'),
-            html.Strong(f'Porcentaje de VM: {porcentaje_vm_actual:.2f}%'),
-            mejora_texto,
             primary_combo_elements,
-)
+        )
