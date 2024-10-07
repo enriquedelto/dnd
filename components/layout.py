@@ -28,78 +28,6 @@ def create_layout(app):
                                 ),
                             ])
                         ], className='mb-3'),
-                        # Selección de Armas
-                        dbc.Row([
-                            dbc.Col([
-                                dbc.Label('Arma Izquierda', html_for='weapon1_left'),
-                                dcc.Dropdown(
-                                    id='weapon1_left',
-                                    options=[{'label': w['Nombre'], 'value': w['Nombre']} for w in weapon_stats.values()],
-                                    value=None,
-                                    disabled=False
-                                ),
-                            ]),
-                            dbc.Col([
-                                dbc.Label('Arma Derecha', html_for='weapon1_right'),
-                                dcc.Dropdown(
-                                    id='weapon1_right',
-                                    options=[{'label': w['Nombre'], 'value': w['Nombre']} for w in weapon_stats.values()],
-                                    value=None,
-                                    disabled=False
-                                ),
-                            ]),
-                        ], className='mb-3'),
-                        # Selección de Segunda Arma (Opcional)
-                        dbc.Row([
-                            dbc.Col([
-                                dbc.Label('Segunda Arma Izquierda', html_for='weapon2_left'),
-                                dcc.Dropdown(
-                                    id='weapon2_left',
-                                    options=[{'label': w['Nombre'], 'value': w['Nombre']} for w in weapon_stats.values()],
-                                    value=None,
-                                    disabled=False
-                                ),
-                            ]),
-                            dbc.Col([
-                                dbc.Label('Segunda Arma Derecha', html_for='weapon2_right'),
-                                dcc.Dropdown(
-                                    id='weapon2_right',
-                                    options=[{'label': w['Nombre'], 'value': w['Nombre']} for w in weapon_stats.values()],
-                                    value=None,
-                                    disabled=False
-                                ),
-                            ]),
-                        ], className='mb-3'),
-                        # Selección de Tipo de Combate
-                        dbc.Row([
-                            dbc.Col([
-                                dbc.Label('Tipo de Combate', html_for='combat_type'),
-                                dcc.Dropdown(
-                                    id='combat_type',
-                                    options=[
-                                        {'label': 'Arma', 'value': 'weapon'},
-                                        {'label': 'Magia', 'value': 'magic'},
-                                        {'label': 'Mixto', 'value': 'mixed'},
-                                    ],
-                                    value='weapon'
-                                ),
-                            ])
-                        ], className='mb-3'),
-                        # Selección de Combinación
-                        dbc.Row([
-                            dbc.Col([
-                                dbc.Label('Combinación de Ataques', html_for='combination_select'),
-                                dcc.Dropdown(
-                                    id='combination_select',
-                                    options=[
-                                        {'label': 'Combinación 1', 'value': 'comb1'},
-                                        {'label': 'Combinación 2', 'value': 'comb2'},
-                                        {'label': 'Combinación 3', 'value': 'comb3'},
-                                    ],
-                                    value='comb1'
-                                ),
-                            ])
-                        ], className='mb-3'),
 
                         # Tablas de Estadísticas
                         dash_table.DataTable(
@@ -166,7 +94,7 @@ def create_layout(app):
                 dbc.Card([
                     dbc.CardBody([
                         html.H4('Resultados', className='card-title'),
-                        # Agregar menú desplegable para seleccionar tipo de resultado
+                        # Menú desplegable para seleccionar tipo de resultado
                         dbc.Row([
                             dbc.Col([
                                 dbc.Label('Seleccionar Tipo de Resultado', html_for='result_type_select'),
