@@ -6,6 +6,7 @@ from models.character import CharacterStats
 from data.class_stats import class_stats
 from data.weapon_stats import weapon_stats
 import dash_bootstrap_components as dbc
+import dash_table
 
 def obtener_opciones_arma(mano):
     opciones = []
@@ -30,17 +31,20 @@ def register_callbacks(app):
             Output('results_output', 'children'),
         ],
         [
-            Input('input-clase', 'value'),
+            Input('input-class', 'value'),
             Input('stats-table', 'data'),
             Input('movement-table', 'data'),
             Input('result_type_select', 'value'),
-            Input({'type': 'dynamic-input', 'index': ALL}, 'value'),  # Nuevo Input dinámico
+            Input({'type': 'dynamic-input', 'index': ALL}, 'value'),
         ],
     )
-    def actualizar_estadisticas(
-        clase_seleccionada, stats_rows, movement_rows,
+    def update_statistics(
+        selected_class, stats_rows, movement_rows,
         result_type_select, dynamic_input_values
     ):
+        # Imprimir los valores de entrada para depuración
+        print("Valores de entrada:", dynamic_input_values)
+
         # Mapeo de IDs a valores
         input_ids = [
             {'type': 'dynamic-input', 'index': 'weapon1_left'},
@@ -50,8 +54,17 @@ def register_callbacks(app):
             {'type': 'dynamic-input', 'index': 'combat_type'},
             {'type': 'dynamic-input', 'index': 'combination_select'},
         ]
-        # Crear un diccionario de valores
-        dynamic_inputs = dict(zip([item['index'] for item in input_ids], dynamic_input_values))
+        
+        # Crear un diccionario de valores, manejando posibles discrepancias en el orden
+        dynamic_inputs = {}
+        for i, item in enumerate(input_ids):
+            if i < len(dynamic_input_values):
+                dynamic_inputs[item['index']] = dynamic_input_values[i]
+            else:
+                dynamic_inputs[item['index']] = None
+
+        # Imprimir el diccionario de entradas para depuración
+        print("Dynamic inputs:", dynamic_inputs)
 
         # Obtener valores de las armas seleccionadas
         weapon1_left = dynamic_inputs.get('weapon1_left')
@@ -59,6 +72,10 @@ def register_callbacks(app):
         weapon2_left = dynamic_inputs.get('weapon2_left')
         weapon2_right = dynamic_inputs.get('weapon2_right')
         combination_select = dynamic_inputs.get('combination_select', 'comb1')
+
+        # Imprimir valores de armas para depuración
+        print(f"Armas: {weapon1_left}, {weapon1_right}, {weapon2_left}, {weapon2_right}")
+        print(f"Combinación seleccionada: {combination_select}")
 
         # Calcular el peso de las armas seleccionadas
         peso_arma = 0
@@ -72,12 +89,12 @@ def register_callbacks(app):
             weapon_left = weapon2_left
             weapon_right = weapon2_right
 
-        if weapon_left:
+        if weapon_left and weapon_left in weapon_stats:
             weapon = weapon_stats[weapon_left]
             peso_arma += weapon.get('Weight', 0)
             weapons_selected.append(weapon_left)
 
-        if weapon_right:
+        if weapon_right and weapon_right in weapon_stats:
             weapon = weapon_stats[weapon_right]
             peso_arma += weapon.get('Weight', 0)
             weapons_selected.append(weapon_right)
@@ -97,48 +114,48 @@ def register_callbacks(app):
                 weapon2_right_disabled = True
 
         # Obtener los atributos base de la clase seleccionada
-        atributos_base = class_stats[clase_seleccionada]
+        atributos_base = class_stats[selected_class]
         
         # Inicializar encantamientos
         add_stats = {}
         
-        # Procesar stats_table
+        # Process stats_table
         if not stats_rows:
             stats_rows = [
-                {'Estadística': 'Fuerza', 'Valor': atributos_base['Strength'], 'Add': 0},
-                {'Estadística': 'Vigor', 'Valor': atributos_base['Vigor'], 'Add': 0},
-                {'Estadística': 'Agilidad', 'Valor': atributos_base['Agility'], 'Add': 0},
-                {'Estadística': 'Destreza', 'Valor': atributos_base['Dexterity'], 'Add': 0},
-                {'Estadística': 'Voluntad', 'Valor': atributos_base['Will'], 'Add': 0},
-                {'Estadística': 'Conocimiento', 'Valor': atributos_base['Knowledge'], 'Add': 0},
-                {'Estadística': 'Ingenio', 'Valor': atributos_base['Resourcefulness'], 'Add': 0},
+                {'Stat': 'Strength', 'Value': atributos_base['Strength'], 'Add': 0},
+                {'Stat': 'Vigor', 'Value': atributos_base['Vigor'], 'Add': 0},
+                {'Stat': 'Agility', 'Value': atributos_base['Agility'], 'Add': 0},
+                {'Stat': 'Dexterity', 'Value': atributos_base['Dexterity'], 'Add': 0},
+                {'Stat': 'Will', 'Value': atributos_base['Will'], 'Add': 0},
+                {'Stat': 'Knowledge', 'Value': atributos_base['Knowledge'], 'Add': 0},
+                {'Stat': 'Resourcefulness', 'Value': atributos_base['Resourcefulness'], 'Add': 0},
             ]
         else:
             for row in stats_rows:
-                stat_name = row['Estadística']
+                stat_name = row['Stat']
                 add_value = float(row['Add']) if row['Add'] else 0
                 add_stats[stat_name] = add_value
         
-        # Procesar movement_table
+        # Process movement_table
         movement_add = 0
         movement_bonus = 0
-        peso_armadura = 0
+        armor_weight = 0
 
         if not movement_rows:
             movement_rows = [
-                {'Estadística': 'Velocidad de Movimiento', 'Valor': '', 'Add': 0, 'Bonus': 0},
-                {'Estadística': 'Velocidad de movimiento con arma', 'Valor': '', 'Add': '', 'Bonus': ''},
-                {'Estadística': 'Peso de arma', 'Valor': 0, 'Add': '', 'Bonus': ''},
-                {'Estadística': 'Peso de armadura', 'Valor': 0, 'Add': '', 'Bonus': ''},
+                {'Stat': 'Movement Speed', 'Value': '', 'Add': 0, 'Bonus': 0},
+                {'Stat': 'Movement Speed with Weapon', 'Value': '', 'Add': '', 'Bonus': ''},
+                {'Stat': 'Weapon Weight', 'Value': 0, 'Add': '', 'Bonus': ''},
+                {'Stat': 'Armor Weight', 'Value': 0, 'Add': '', 'Bonus': ''},
             ]
         else:
             for row in movement_rows:
-                stat_name = row['Estadística']
-                if stat_name == 'Velocidad de Movimiento':
+                stat_name = row['Stat']
+                if stat_name == 'Movement Speed':
                     movement_add = float(row['Add']) if row['Add'] else 0
                     movement_bonus = float(row['Bonus']) if row['Bonus'] else 0
-                elif stat_name == 'Peso de armadura':
-                    peso_armadura = float(row['Valor']) if row['Valor'] else 0
+                elif stat_name == 'Armor Weight':
+                    armor_weight = float(row['Value']) if row['Value'] else 0
 
         # Crear una instancia de CharacterStats
         character = CharacterStats(
@@ -153,126 +170,166 @@ def register_callbacks(app):
             movement_add=movement_add,
             movement_bonus=movement_bonus,
             peso_arma=peso_arma,
-            peso_armadura=peso_armadura
+            peso_armadura=armor_weight
         )
 
         # Actualizar los valores en la tabla de estadísticas principales
         for row in stats_rows:
-            stat_name = row['Estadística']
-            if stat_name == 'Fuerza':
-                row['Valor'] = character.strength
+            stat_name = row['Stat']
+            if stat_name == 'Strength':
+                row['Value'] = character.strength
             elif stat_name == 'Vigor':
-                row['Valor'] = character.vigor
-            elif stat_name == 'Agilidad':
-                row['Valor'] = character.agility
-            elif stat_name == 'Destreza':
-                row['Valor'] = character.dexterity
-            elif stat_name == 'Voluntad':
-                row['Valor'] = character.will
-            elif stat_name == 'Conocimiento':
-                row['Valor'] = character.knowledge
-            elif stat_name == 'Ingenio':
-                row['Valor'] = character.resourcefulness
+                row['Value'] = character.vigor
+            elif stat_name == 'Agility':
+                row['Value'] = character.agility
+            elif stat_name == 'Dexterity':
+                row['Value'] = character.dexterity
+            elif stat_name == 'Will':
+                row['Value'] = character.will
+            elif stat_name == 'Knowledge':
+                row['Value'] = character.knowledge
+            elif stat_name == 'Resourcefulness':
+                row['Value'] = character.resourcefulness
 
         # Actualizar los valores en la tabla de movement
         for row in movement_rows:
-            stat_name = row['Estadística']
-            if stat_name == 'Velocidad de Movimiento':
-                row['Valor'] = character.movement_stats['Velocidad de Movimiento']
-            elif stat_name == 'Velocidad de movimiento con arma':
-                row['Valor'] = character.movement_stats['Velocidad de movimiento con arma']
-            elif stat_name == 'Peso de arma':
-                row['Valor'] = peso_arma
-            elif stat_name == 'Peso de armadura':
-                row['Valor'] = peso_armadura
+            stat_name = row['Stat']
+            if stat_name == 'Movement Speed':
+                row['Value'] = character.movement_stats['Movement Speed']
+            elif stat_name == 'Movement Speed with Weapon':
+                row['Value'] = character.movement_stats['Movement Speed with Weapon']
+            elif stat_name == 'Weapon Weight':
+                row['Value'] = peso_arma
+            elif stat_name == 'Armor Weight':
+                row['Value'] = armor_weight
 
         # Preparar datos para las tablas de categorías
         movement_data = movement_rows
-        defense_data = [{'Estadística': k, 'Valor': v} for k, v in character.defense_stats.items()]
-        utility_data = [{'Estadística': k, 'Valor': v} for k, v in character.utility_stats.items()]
+        defense_data = [{'Stat': k, 'Value': v} for k, v in character.defense_stats.items()]
+        utility_data = [{'Stat': k, 'Value': v} for k, v in character.utility_stats.items()]
 
-        # Generar contenido de resultados basado en 'result_type_select'
+        # Preparar contenido de resultados basado en 'result_type_select'
         if result_type_select == 'damage':
-            results_content = html.Div([
-                dbc.Row([
-                    dbc.Col([
-                        dbc.Label('Arma Izquierda', html_for='weapon1_left'),
-                        dcc.Dropdown(
-                            id={'type': 'dynamic-input', 'index': 'weapon1_left'},
-                            options=obtener_opciones_arma('main'),
-                            value=weapon1_left,
-                        ),
-                    ]),
-                    dbc.Col([
-                        dbc.Label('Arma Derecha', html_for='weapon1_right'),
-                        dcc.Dropdown(
-                            id={'type': 'dynamic-input', 'index': 'weapon1_right'},
-                            options=obtener_opciones_arma('off'),
-                            value=weapon1_right,
-                            disabled=weapon1_right_disabled
-                        ),
-                    ]),
-                ], className='mb-3'),
-                dbc.Row([
-                    dbc.Col([
-                        dbc.Label('Segunda Arma Izquierda', html_for='weapon2_left'),
-                        dcc.Dropdown(
-                            id={'type': 'dynamic-input', 'index': 'weapon2_left'},
-                            options=obtener_opciones_arma('main'),
-                            value=weapon2_left,
-                        ),
-                    ]),
-                    dbc.Col([
-                        dbc.Label('Segunda Arma Derecha', html_for='weapon2_right'),
-                        dcc.Dropdown(
-                            id={'type': 'dynamic-input', 'index': 'weapon2_right'},
-                            options=obtener_opciones_arma('off'),
-                            value=weapon2_right,
-                            disabled=weapon2_right_disabled
-                        ),
-                    ]),
-                ], className='mb-3'),
-                dbc.Row([
-                    dbc.Col([
-                        dbc.Label('Tipo de Combate', html_for='combat_type'),
-                        dcc.Dropdown(
-                            id={'type': 'dynamic-input', 'index': 'combat_type'},
-                            options=[
-                                {'label': 'Arma', 'value': 'weapon'},
-                                {'label': 'Magia', 'value': 'magic'},
-                                {'label': 'Mixto', 'value': 'mixed'},
-                            ],
-                            value=dynamic_inputs.get('combat_type', 'weapon')
-                        ),
-                    ]),
-                    dbc.Col([
-                        dbc.Label('Combinación de Ataques', html_for='combination_select'),
-                        dcc.Dropdown(
-                            id={'type': 'dynamic-input', 'index': 'combination_select'},
-                            options=[
-                                {'label': 'Combinación 1', 'value': 'comb1'},
-                                {'label': 'Combinación 2', 'value': 'comb2'},
-                                {'label': 'Combinación 3', 'value': 'comb3'},
-                            ],
-                            value=dynamic_inputs.get('combination_select', 'comb1')
-                        ),
-                    ]),
-                ], className='mb-3'),
+            # Obtener armas seleccionadas
+            selected_weapons = []
+            if combination_select == 'comb1':
+                selected_weapons = [weapon1_left, weapon1_right]
+            elif combination_select == 'comb2':
+                selected_weapons = [weapon2_left, weapon2_right]
+
+            # Filtrar armas no seleccionadas
+            selected_weapons = [w for w in selected_weapons if w]
+
+            # Calcular daño por cada arma y ajustar tiempos
+            combo_details = []
+            total_combo_time = 0
+            total_damage = 0
+            hit_slowdown_info = []  # Nueva lista para almacenar información de Hit Slowdown
+
+            for weapon_name in selected_weapons:
+                weapon = weapon_stats.get(weapon_name)
+                if not weapon:
+                    continue  # Salta si el arma no está definida
+
+                combo = weapon.get('Combo', [])
+                hit_slowdown = weapon.get('Hit Slowdown', {})
+                
+                # Agregar información de Hit Slowdown si está disponible
+                if hit_slowdown:
+                    hit_slowdown_info.append({
+                        'Weapon': weapon_name,
+                        'Percentage': hit_slowdown.get('Percentage', 'N/A'),
+                        'Duration': hit_slowdown.get('Duration', 'N/A')
+                    })
+
+                for attack in combo:
+                    damage_percent = attack.get('Damage %', 1.0)
+                    windup = attack.get('Windup', 0)  # En ms
+                    attack_time = attack.get('Attack', 0)  # En ms
+
+                    # Calcular daño real
+                    base_min_damage = weapon.get('Minimum Damage', weapon.get('Damage', 0))
+                    base_max_damage = weapon.get('Maximum Damage', weapon.get('Damage', 0))
+                    base_damage = (base_min_damage + base_max_damage) / 2
+                    actual_damage = character.calculate_attack_damage(
+                        base_damage, damage_percent, 1.0  # Asumiendo Impact Zone 1
+                    )
+                    total_damage += actual_damage
+
+                    # Ajustar tiempos basados en Action Speed
+                    action_speed_factor = character.calculate_action_speed_factor()
+                    adjusted_windup = windup * action_speed_factor
+                    adjusted_attack_time = attack_time * action_speed_factor
+
+                    total_combo_time += adjusted_windup + adjusted_attack_time
+
+                    combo_details.append({
+                        'Weapon': weapon_name,
+                        'Damage (%)': f"{damage_percent*100:.1f}%",
+                        'Actual Damage': f"{actual_damage:.2f}",
+                        'Windup (ms)': f"{adjusted_windup:.2f}",
+                        'Attack (ms)': f"{adjusted_attack_time:.2f}",
+                        'Hit Slowdown (%)': hit_slowdown.get('Percentage', 'N/A'),
+                        'Slowdown Duration (s)': hit_slowdown.get('Duration', 'N/A'),
+                    })
+
+            # Crear una tabla de detalles del combo
+            combo_table = dash_table.DataTable(
+                columns=[
+                    {'name': 'Weapon', 'id': 'Weapon'},
+                    {'name': 'Damage (%)', 'id': 'Damage (%)'},
+                    {'name': 'Actual Damage', 'id': 'Actual Damage'},
+                    {'name': 'Windup (ms)', 'id': 'Windup (ms)'},
+                    {'name': 'Attack (ms)', 'id': 'Attack (ms)'},
+                    {'name': 'Hit Slowdown (%)', 'id': 'Hit Slowdown (%)'},
+                    {'name': 'Slowdown Duration (s)', 'id': 'Slowdown Duration (s)'},
+                ],
+                data=combo_details,
+                style_cell={'textAlign': 'left', 'padding': '5px'},
+                style_header={'fontWeight': 'bold'},
+                style_table={'overflowX': 'auto'},
+            )
+
+            # Crear información de Hit Slowdown
+            hit_slowdown_content = []
+            if hit_slowdown_info:
+                hit_slowdown_content = [
+                    html.H5('Hit Slowdown'),
+                    html.Ul([
+                        html.Li([
+                            f"{info['Weapon']}: ",
+                            f"Percentage: {info['Percentage']}%, ",
+                            f"Duration: {info['Duration']} seconds"
+                        ]) for info in hit_slowdown_info
+                    ])
+                ]
+
+            # Mostrar tiempo total del combo y daño total
+            summary = html.Div([
+                html.H5('Combo Summary'),
+                html.P(f"Total Combo Damage: {round(total_damage, 2)}"),
+                html.P(f"Total Combo Time: {round(total_combo_time, 2)} ms"),
+                combo_table,
                 html.Hr(),
-                html.H5('Resultados de Daño'),
-                # Aquí puedes agregar más detalles sobre el daño calculado
+            ] + hit_slowdown_content)  # Agregar información de Hit Slowdown al resumen
+
+            results_content = html.Div([
+                # ... [componentes existentes para selección de armas y tipos de combate] ...
+                html.Hr(),
+                html.H5('Damage Results'),
+                summary,
             ])
         elif result_type_select == 'movement_speed':
-            movement_speed = character.movement_stats.get('Velocidad de Movimiento', 'N/A')
-            movement_speed_with_weapon = character.movement_stats.get('Velocidad de movimiento con arma', 'N/A')
+            movement_speed = character.movement_stats.get('Movement Speed', 'N/A')
+            movement_speed_with_weapon = character.movement_stats.get('Movement Speed with Weapon', 'N/A')
 
             results_content = html.Div([
-                html.H5('Velocidad de Movimiento'),
-                html.P(f"Velocidad de Movimiento Total: {movement_speed}"),
-                html.P(f"Velocidad de Movimiento con Arma: {movement_speed_with_weapon}"),
+                html.H5('Movement Speed'),
+                html.P(f"Total Movement Speed: {movement_speed}"),
+                html.P(f"Movement Speed with Weapon: {movement_speed_with_weapon}"),
             ])
         else:
-            results_content = html.P('Selecciona un tipo de resultado.')
+            results_content = html.P('Select a result type.')
 
         return (
             stats_rows,
